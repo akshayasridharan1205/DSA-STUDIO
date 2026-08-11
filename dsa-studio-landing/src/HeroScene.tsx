@@ -1,13 +1,14 @@
-import { useMemo } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { useMemo, useEffect, useRef } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
 
 const COLORS = [
-  '#0f172a', // Navy (slate-900)
-  '#1e1b4b', // Deep Indigo (indigo-950)
-  '#311025', // Dark Plum
-  '#3f1118', // Muted Burgundy
+  '#3a1324', // Deep Burgundy
+  '#3d2e4d', // Dusty Purple
+  '#09132b', // Midnight Blue
+  '#2a1040', // Dark Violet
+  '#13243a', // Muted Navy
 ];
 
 function CurveNodes() {
@@ -36,10 +37,15 @@ function CurveNodes() {
       const m = new THREE.Matrix4().lookAt(pos, target, new THREE.Vector3(0, 1, 0));
       const rotation = new THREE.Euler().setFromRotationMatrix(m);
       
-      data.push({ pos, rotation });
+      // Random but stable color selection per block
+      const randomSeed = Math.sin(i * 12345.67) * 10000;
+      const colorIndex = Math.floor(Math.abs(randomSeed - Math.floor(randomSeed)) * COLORS.length);
+      const color = COLORS[colorIndex];
+      
+      data.push({ pos, rotation, color });
     }
     
-    return { curve: c, boxesData: data };
+    return { boxesData: data };
   }, []);
 
   return (
@@ -50,13 +56,13 @@ function CurveNodes() {
           position={data.pos} 
           rotation={data.rotation} 
           args={[0.4, 0.4, 1.2]} 
-          radius={0.05} 
+          radius={0.08} 
           smoothness={4}
         >
           <meshStandardMaterial 
-            color={COLORS[i % COLORS.length]} 
-            roughness={0.7} 
-            metalness={0.2} 
+            color={data.color} 
+            roughness={0.35} 
+            metalness={0.25} 
           />
         </RoundedBox>
       ))}
@@ -64,14 +70,50 @@ function CurveNodes() {
   );
 }
 
+function CameraRig() {
+  const mouse = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      // Normalize mouse position from -1 to 1
+      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  useFrame((state) => {
+    // Target position for parallax (subtle shift of ±1.5 units)
+    const targetX = mouse.current.x * 1.5;
+    const targetY = mouse.current.y * 1.5;
+    
+    // Smoothly lerp camera position
+    state.camera.position.x += (targetX - state.camera.position.x) * 0.03;
+    state.camera.position.y += (targetY - state.camera.position.y) * 0.03;
+    
+    // Adjust lookAt slightly to enhance parallax depth
+    state.camera.lookAt(0, 0, 0);
+  });
+
+  return null;
+}
+
 export default function HeroScene() {
   return (
     <div className="absolute inset-0 z-0 pointer-events-none">
       <Canvas camera={{ position: [0, 0, 15], fov: 45 }}>
-        {/* Transparent background by default in Canvas */}
-        <ambientLight intensity={0.5} />
-        <directionalLight position={[-10, 10, 5]} intensity={1.5} color="#ffffff" />
+        {/* Very low ambient light to allow deep shadows */}
+        <ambientLight intensity={0.1} />
+        
+        {/* Soft key light from upper-left */}
+        <directionalLight position={[-10, 10, 5]} intensity={1.2} color="#ffffff" />
+        
+        {/* Cool subtle rim light from the right */}
+        <directionalLight position={[10, -2, -5]} intensity={1.5} color="#88aaff" />
+        
         <CurveNodes />
+        <CameraRig />
       </Canvas>
     </div>
   );
