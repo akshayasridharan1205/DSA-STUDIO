@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { RoundedBox } from '@react-three/drei';
+import { RoundedBox, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 
 const COLORS = [
@@ -99,6 +99,24 @@ function CameraRig() {
   return null;
 }
 
+function Starfield() {
+  const ref = useRef<THREE.Group>(null);
+  
+  useFrame(() => {
+    if (ref.current) {
+      // Very slow independent drift
+      ref.current.rotation.x -= 0.0001;
+      ref.current.rotation.y -= 0.0002;
+    }
+  });
+
+  return (
+    <group ref={ref}>
+      <Stars radius={50} depth={50} count={500} factor={4} saturation={0} fade speed={1} />
+    </group>
+  );
+}
+
 export default function HeroScene() {
   return (
     <div className="absolute inset-0 z-0 pointer-events-none">
@@ -112,6 +130,7 @@ export default function HeroScene() {
         {/* Cool subtle rim light from the right */}
         <directionalLight position={[10, -2, -5]} intensity={1.5} color="#88aaff" />
         
+        <Starfield />
         <CurveNodes />
         <CameraRig />
       </Canvas>

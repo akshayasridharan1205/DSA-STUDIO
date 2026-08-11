@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
+import { motion } from 'framer-motion';
 import HeroScene from './HeroScene';
 
 export default function App() {
@@ -32,7 +33,12 @@ export default function App() {
       <HeroScene />
 
       {/* Navbar */}
-      <nav className="relative z-50 flex items-center justify-between px-6 py-6 md:px-10">
+      <motion.nav 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0 }}
+        className="relative z-50 flex items-center justify-between px-6 py-6 md:px-10"
+      >
         {/* Logo */}
         <div className="flex items-center gap-3 cursor-pointer group">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white group-hover:scale-105 transition-transform duration-300">
@@ -61,7 +67,7 @@ export default function App() {
         >
           <Menu className="w-6 h-6" />
         </button>
-      </nav>
+      </motion.nav>
 
       {/* Mobile Menu Overlay */}
       <div 
@@ -98,23 +104,38 @@ export default function App() {
       {/* Hero Section */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 text-center">
         <div className="max-w-4xl mx-auto flex flex-col items-center">
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold uppercase tracking-tight text-white mb-6" style={{ lineHeight: 0.9 }}>
-            Learn Data Structures<br />
-            <span className="text-white">By Watching Them Move</span>
-          </h1>
+          <motion.h1 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+            className="text-5xl sm:text-6xl lg:text-7xl font-bold uppercase font-display tracking-tight text-white mb-8 leading-[1.05]" 
+          >
+            WRITE CODE.<br />
+            <span className="text-white">WATCH IT MOVE.</span>
+          </motion.h1>
           
-          <p className="max-w-2xl text-lg md:text-xl text-white/60 mb-12 font-light leading-relaxed">
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.25 }}
+            className="max-w-2xl text-lg md:text-xl text-white/60 mb-12 font-light leading-relaxed"
+          >
             Write code, step through it line by line, and watch every pointer, node, and memory change animate in real time.
-          </p>
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-6">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.35 }}
+            className="flex flex-col sm:flex-row items-center gap-6"
+          >
             <button className="px-8 py-3.5 bg-white text-black rounded-full font-semibold tracking-wide hover:bg-white/90 transition-all hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(255,255,255,0.2)]">
               Start Learning
             </button>
             <button className="px-6 py-3.5 text-white/80 font-medium hover:text-white transition-colors relative after:absolute after:bottom-2.5 after:left-6 after:right-6 after:h-[1px] after:bg-white/30 hover:after:bg-white/80 after:transition-colors">
               View Topics
             </button>
-          </div>
+          </motion.div>
         </div>
       </main>
 
