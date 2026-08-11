@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
+import HeroScene from './HeroScene';
 
 export default function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -28,6 +29,7 @@ export default function App() {
       <div className="absolute inset-0 z-0 bg-radial-subtle flex items-center justify-center pointer-events-none">
         <div className="absolute inset-0 grid-bg opacity-30"></div>
       </div>
+      <HeroScene />
 
       {/* Navbar */}
       <nav className="relative z-50 flex items-center justify-between px-6 py-6 md:px-10">
