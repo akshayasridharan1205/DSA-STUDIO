@@ -12,61 +12,76 @@ const COLORS = [
 ];
 
 function CurveNodes() {
-  const { boxesData } = useMemo(() => {
-    // Gentle S-curve across the screen
+  const count = 55;
+  const boxRefs = useRef<(THREE.Object3D | null)[]>([]);
+  const phaseOffset = useRef(0);
+
+  const curve = useMemo(() => {
+    // Essentially flat, wide figure-eight with only subtle z-depth at crossing
     const points = [
-      new THREE.Vector3(-14, -6, -5),
-      new THREE.Vector3(-9, 3, -2),
-      new THREE.Vector3(-4, 5, 1),
-      new THREE.Vector3(1, 0, 3),
-      new THREE.Vector3(5, -4, 1),
-      new THREE.Vector3(10, -2, -3),
-      new THREE.Vector3(15, 4, -5),
+      new THREE.Vector3(0, 0, 1),        // Center (front)
+      new THREE.Vector3(7, 3, 0),        // Top Right
+      new THREE.Vector3(14, 0, 0),       // Right Outer
+      new THREE.Vector3(7, -3, 0),       // Bottom Right
+      new THREE.Vector3(0, 0, -1),       // Center (back)
+      new THREE.Vector3(-7, 3, 0),       // Top Left
+      new THREE.Vector3(-14, 0, 0),      // Left Outer
+      new THREE.Vector3(-7, -3, 0),      // Bottom Left
     ];
-    const c = new THREE.CatmullRomCurve3(points);
-    
-    const count = 40;
-    const data = [];
-    
+    return new THREE.CatmullRomCurve3(points, true);
+  }, []);
+
+  const colors = useMemo(() => {
+    const arr = [];
     for (let i = 0; i < count; i++) {
-      const t = i / (count - 1);
-      const pos = c.getPointAt(t);
-      const tangent = c.getTangentAt(t);
+      const randomSeed = Math.sin(i * 12345.67) * 10000;
+      const colorIndex = Math.floor(Math.abs(randomSeed - Math.floor(randomSeed)) * COLORS.length);
+      arr.push(COLORS[colorIndex]);
+    }
+    return arr;
+  }, []);
+
+  useFrame((_, delta) => {
+    // Continuous flow along the curve (1 full loop in ~20 seconds)
+    phaseOffset.current += delta * 0.05;
+
+    for (let i = 0; i < count; i++) {
+      const mesh = boxRefs.current[i];
+      if (!mesh) continue;
+
+      const baseT = i / count;
+      const t = (baseT + phaseOffset.current) % 1.0;
+
+      const pos = curve.getPointAt(t);
+      const tangent = curve.getTangentAt(t);
       
       const target = pos.clone().add(tangent);
       const m = new THREE.Matrix4().lookAt(pos, target, new THREE.Vector3(0, 1, 0));
       const rotation = new THREE.Euler().setFromRotationMatrix(m);
       
-      // Random but stable color selection per block
-      const randomSeed = Math.sin(i * 12345.67) * 10000;
-      const colorIndex = Math.floor(Math.abs(randomSeed - Math.floor(randomSeed)) * COLORS.length);
-      const color = COLORS[colorIndex];
-      
-      data.push({ pos, rotation, color });
+      mesh.position.copy(pos);
+      mesh.rotation.copy(rotation);
     }
-    
-    return { boxesData: data };
-  }, []);
+  });
 
   return (
-    <>
-      {boxesData.map((data, i) => (
+    <group>
+      {Array.from({ length: count }).map((_, i) => (
         <RoundedBox 
           key={i} 
-          position={data.pos} 
-          rotation={data.rotation} 
+          ref={(el) => { boxRefs.current[i] = el; }}
           args={[0.4, 0.4, 1.2]} 
           radius={0.08} 
           smoothness={4}
         >
           <meshStandardMaterial 
-            color={data.color} 
+            color={colors[i]} 
             roughness={0.35} 
             metalness={0.25} 
           />
         </RoundedBox>
       ))}
-    </>
+    </group>
   );
 }
 
@@ -124,11 +139,11 @@ export default function HeroScene() {
         {/* Very low ambient light to allow deep shadows */}
         <ambientLight intensity={0.1} />
         
-        {/* Soft key light from upper-left */}
-        <directionalLight position={[-10, 10, 5]} intensity={1.2} color="#ffffff" />
+        {/* Stronger key light from upper-left */}
+        <directionalLight position={[-10, 10, 5]} intensity={3.5} color="#ffffff" />
         
-        {/* Cool subtle rim light from the right */}
-        <directionalLight position={[10, -2, -5]} intensity={1.5} color="#88aaff" />
+        {/* Stronger rim light from the right */}
+        <directionalLight position={[10, -2, -5]} intensity={2.5} color="#88aaff" />
         
         <Starfield />
         <CurveNodes />

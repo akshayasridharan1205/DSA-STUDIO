@@ -109,6 +109,7 @@ export default function App() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
             className="text-5xl sm:text-6xl lg:text-7xl font-bold uppercase font-display tracking-tight text-white mb-8 leading-[1.05]" 
+            style={{ fontWeight: 700 }}
           >
             WRITE CODE.<br />
             <span className="text-white">WATCH IT MOVE.</span>
