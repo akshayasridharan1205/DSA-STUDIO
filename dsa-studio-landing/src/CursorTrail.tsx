@@ -35,6 +35,8 @@ export default function CursorTrail() {
     
     // Store positions and a randomized color per point
     const trail: { x: number; y: number; r: number; g: number; b: number }[] = [];
+    const sparks: { x: number; y: number; vx: number; vy: number; age: number; maxAge: number }[] = [];
+
     
     let colorTimer = 0;
     let animationFrameId: number;
@@ -56,6 +58,24 @@ export default function CursorTrail() {
       // Add slight jitter
       const jitterX = (Math.random() - 0.5) * 4;
       const jitterY = (Math.random() - 0.5) * 4;
+
+      // Calculate speed proxy using distance between raw mouse and smoothed mouse
+      const speed = Math.hypot(mouse.x - smoothedMouse.x, mouse.y - smoothedMouse.y);
+      
+      // Spawn sparks based on speed
+      if (speed > 5) {
+        const spawnCount = Math.floor(Math.random() * (speed / 15));
+        for (let i = 0; i < spawnCount; i++) {
+          sparks.push({
+            x: smoothedMouse.x + (Math.random() - 0.5) * 10,
+            y: smoothedMouse.y + (Math.random() - 0.5) * 10,
+            vx: (Math.random() - 0.5) * 2,
+            vy: (Math.random() - 0.5) * 2 - 0.5, // slight upward initial velocity bias
+            age: 0,
+            maxAge: 20 + Math.random() * 20
+          });
+        }
+      }
 
       trail.unshift({
         x: smoothedMouse.x + jitterX,
@@ -91,21 +111,25 @@ export default function CursorTrail() {
         ctx.fill();
       }
       
-      // 2. Draw bright core line
-      if (trail.length > 1) {
-        ctx.beginPath();
-        // Use quadratic curves to smooth the line through the points
-        ctx.moveTo(trail[0].x, trail[0].y);
-        for (let i = 1; i < trail.length - 1; i++) {
-          const xc = (trail[i].x + trail[i + 1].x) / 2;
-          const yc = (trail[i].y + trail[i + 1].y) / 2;
-          ctx.quadraticCurveTo(trail[i].x, trail[i].y, xc, yc);
+      // Draw sparks
+      for (let i = sparks.length - 1; i >= 0; i--) {
+        const spark = sparks[i];
+        spark.x += spark.vx;
+        spark.y += spark.vy;
+        spark.vy += 0.05; // subtle gravity
+        spark.age++;
+
+        if (spark.age >= spark.maxAge) {
+          sparks.splice(i, 1);
+          continue;
         }
-        ctx.lineTo(trail[trail.length - 1].x, trail[trail.length - 1].y);
-        
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
+
+        const sparkOpacity = 1 - (spark.age / spark.maxAge);
+        // Bright pale blue-white
+        ctx.fillStyle = `rgba(220, 240, 255, ${sparkOpacity})`;
+        ctx.beginPath();
+        ctx.arc(spark.x, spark.y, 1.2, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       animationFrameId = requestAnimationFrame(render);
