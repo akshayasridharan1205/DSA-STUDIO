@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Line } from '@react-three/drei';
 import * as THREE from 'three';
@@ -10,10 +10,20 @@ export default function CursorTrail() {
 
   const pointsCount = 30; // approx 0.5s trail
   const trail = useRef<THREE.Vector3[]>([]);
+  const mouse = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mouse.current.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.current.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   useFrame((state) => {
     // Project mouse coordinates to a Z=5 plane
-    const vec = new THREE.Vector3(state.pointer.x, state.pointer.y, 0.5);
+    const vec = new THREE.Vector3(mouse.current.x, mouse.current.y, 0.5);
     vec.unproject(state.camera);
     const dir = vec.sub(state.camera.position).normalize();
     const distance = (5 - state.camera.position.z) / dir.z;
