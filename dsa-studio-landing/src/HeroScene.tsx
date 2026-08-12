@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { RoundedBox, Stars } from '@react-three/drei';
 import * as THREE from 'three';
+import CursorTrail from './CursorTrail';
 
 const COLORS = [
   '#3a1324', // Deep Burgundy
@@ -148,6 +149,7 @@ export default function HeroScene() {
         <Starfield />
         <CurveNodes />
         <CameraRig />
+        <CursorTrail />
       </Canvas>
     </div>
   );
