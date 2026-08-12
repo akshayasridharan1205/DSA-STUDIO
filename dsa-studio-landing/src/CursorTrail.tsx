@@ -31,7 +31,7 @@ export default function CursorTrail() {
     };
     window.addEventListener('mousemove', handleMouseMove);
 
-    const pointsCount = 30;
+    const pointsCount = 50; // Increased to compensate for lack of motion blur accumulation
     
     // Store positions and a randomized color per point
     const trail: { x: number; y: number; r: number; g: number; b: number }[] = [];
@@ -40,10 +40,8 @@ export default function CursorTrail() {
     let animationFrameId: number;
 
     const render = () => {
-      // Clear with low alpha for a motion-blur fade out
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.08)';
-      ctx.fillRect(0, 0, width, height);
+      // Clear canvas fully to preserve exact transparency underneath
+      ctx.clearRect(0, 0, width, height);
 
       // Lerp smoothed mouse
       smoothedMouse.x += (mouse.x - smoothedMouse.x) * 0.2;
