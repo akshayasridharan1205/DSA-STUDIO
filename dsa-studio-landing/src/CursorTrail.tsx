@@ -11,6 +11,7 @@ export default function CursorTrail() {
   const pointsCount = 30; // approx 0.5s trail
   const trail = useRef<THREE.Vector3[]>([]);
   const mouse = useRef({ x: 0, y: 0 });
+  const smoothedMouse = useRef(new THREE.Vector3(0, 0, 5));
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -22,25 +23,42 @@ export default function CursorTrail() {
   }, []);
 
   useFrame((state) => {
-    // Project mouse coordinates to a Z=5 plane
-    const vec = new THREE.Vector3(mouse.current.x, mouse.current.y, 0.5);
-    vec.unproject(state.camera);
-    const dir = vec.sub(state.camera.position).normalize();
+    // Project raw mouse coordinates to a Z=5 plane
+    const rawVec = new THREE.Vector3(mouse.current.x, mouse.current.y, 0.5);
+    rawVec.unproject(state.camera);
+    const dir = rawVec.sub(state.camera.position).normalize();
     const distance = (5 - state.camera.position.z) / dir.z;
-    const currentPos = state.camera.position.clone().add(dir.multiplyScalar(distance));
+    const targetPos = state.camera.position.clone().add(dir.multiplyScalar(distance));
 
-    trail.current.unshift(currentPos);
+    // Initialize buffer on first frame if empty
+    if (trail.current.length === 0) {
+      smoothedMouse.current.copy(targetPos);
+      for (let i = 0; i < pointsCount; i++) {
+        trail.current.push(targetPos.clone());
+      }
+    }
+
+    // 1. Smooth the raw mouse input using lerp/damping
+    smoothedMouse.current.lerp(targetPos, 0.2);
+
+    // 2. Push smoothed position into rolling buffer
+    trail.current.unshift(smoothedMouse.current.clone());
     if (trail.current.length > pointsCount) {
       trail.current.pop();
     }
 
+    // 3. Convert buffer to a smooth curve and sample it to remove jagged angular joints
     if (trail.current.length > 1) {
+      const curve = new THREE.CatmullRomCurve3(trail.current, false, 'chordal');
+      // Sample the curve into 60 smooth segments
+      const sampledPoints = curve.getPoints(60);
+
       const positions = [];
       const redPositions = [];
       const cyanPositions = [];
       
-      for (let i = 0; i < trail.current.length; i++) {
-        const p = trail.current[i];
+      for (let i = 0; i < sampledPoints.length; i++) {
+        const p = sampledPoints[i];
         positions.push(p.x, p.y, p.z);
         // Subtle offset for chromatic aberration
         redPositions.push(p.x - 0.04, p.y, p.z);
