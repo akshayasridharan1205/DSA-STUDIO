@@ -149,8 +149,8 @@ export default function HeroScene() {
         <Starfield />
         <CurveNodes />
         <CameraRig />
-        <CursorTrail />
       </Canvas>
+      <CursorTrail />
     </div>
   );
 }
