@@ -11,9 +11,13 @@ app.use(cors({
 
 app.use(express.json());
 
+import executeRouter from './routes/execute';
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
+
+app.use('/api/execute', executeRouter);
 
 app.get('/api/visualize/linked-list/insert', (req, res) => {
   res.json(linkedListInsertSteps);

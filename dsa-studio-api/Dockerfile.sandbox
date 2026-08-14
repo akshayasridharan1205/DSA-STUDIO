@@ -1,0 +1,17 @@
+FROM alpine:3.18
+
+RUN apk update && apk add --no-cache \
+    gcc \
+    musl-dev \
+    python3
+
+# Create a restricted user for execution
+RUN addgroup -S sandbox && adduser -S sandbox -G sandbox
+
+WORKDIR /sandbox
+
+# Restrict permissions
+RUN chown sandbox:sandbox /sandbox
+USER sandbox
+
+CMD ["sh"]
